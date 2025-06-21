@@ -112,8 +112,8 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.9.0'
 
     // Room
-    implementation "androidx.room:room-runtime:2.7.1"
-    ksp "androidx.room:room-compiler:2.7.1"
+    implementation "androidx.room:room-runtime:2.7.2"
+    ksp "androidx.room:room-compiler:2.7.2"
 
     final def daggerVersion = '2.48.1'
     implementation "com.google.dagger:dagger:$daggerVersion"
@@ -220,9 +220,9 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.17'
     implementation 'io.reactivex.rxjava2:rxkotlin:2.4.0'
 
-    implementation "androidx.compose.ui:ui:1.8.2"
-    implementation "androidx.compose.foundation:foundation:1.8.2"
-    implementation "androidx.compose.material:material:1.8.2"
+    implementation "androidx.compose.ui:ui:1.8.3"
+    implementation "androidx.compose.foundation:foundation:1.8.3"
+    implementation "androidx.compose.material:material:1.8.3"
 
     implementation 'org.jsoup:jsoup:1.14.3'
 }
