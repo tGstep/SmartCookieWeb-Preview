@@ -15,6 +15,7 @@ import com.cookiejarapps.android.smartcookieweb.R
 import com.cookiejarapps.android.smartcookieweb.ext.components
 import com.cookiejarapps.android.smartcookieweb.preferences.UserPreferences
 import com.cookiejarapps.android.smartcookieweb.settings.HomepageBackgroundChoice
+import com.cookiejarapps.android.smartcookieweb.theme.applyAppTheme
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
@@ -62,11 +63,6 @@ class CustomizationSettingsFragment : BaseSettingsFragment() {
             isChecked = UserPreferences(requireContext()).shouldUseBottomToolbar,
             onCheckChange = {
                 UserPreferences(requireContext()).shouldUseBottomToolbar = it
-                Toast.makeText(
-                    context,
-                    requireContext().resources.getText(R.string.app_restart),
-                    Toast.LENGTH_LONG
-                ).show()
             }
         )
 
@@ -353,6 +349,7 @@ class CustomizationSettingsFragment : BaseSettingsFragment() {
             .setPositiveButton(resources.getString(R.string.mozac_feature_prompts_ok)) { _, _ -> }
             .setSingleChoiceItems(singleItems.toTypedArray(), checkedItem) { dialog, which ->
                 UserPreferences(requireContext()).appThemeChoice = which
+                applyAppTheme(which)
             }
             .show()
     }
@@ -363,7 +360,7 @@ class CustomizationSettingsFragment : BaseSettingsFragment() {
         val checkedItem = UserPreferences(requireContext()).webThemeChoice
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(resources.getString(R.string.theme))
+            .setTitle(resources.getString(R.string.web_theme))
             .setNeutralButton(resources.getString(R.string.cancel)) { _, _ ->
                 UserPreferences(requireContext()).webThemeChoice = startingChoice
             }

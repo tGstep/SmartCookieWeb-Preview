@@ -17,7 +17,11 @@ import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.cookiejarapps.android.smartcookieweb.BrowserActivity
@@ -25,10 +29,12 @@ import com.cookiejarapps.android.smartcookieweb.BrowserDirection
 import com.cookiejarapps.android.smartcookieweb.R
 import com.cookiejarapps.android.smartcookieweb.databinding.FragmentSearchDialogBinding
 import com.cookiejarapps.android.smartcookieweb.ext.components
+import com.cookiejarapps.android.smartcookieweb.ext.isAppInDarkTheme
 import com.cookiejarapps.android.smartcookieweb.preferences.UserPreferences
 import com.cookiejarapps.android.smartcookieweb.search.*
 import com.cookiejarapps.android.smartcookieweb.search.awesomebar.AwesomeBarView
 import com.cookiejarapps.android.smartcookieweb.search.toolbar.ToolbarView
+import com.cookiejarapps.android.smartcookieweb.settings.ThemeChoice
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import mozilla.components.concept.storage.HistoryStorage
@@ -68,6 +74,14 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.SearchDialogStyle)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        dialog?.window?.let { win ->
+            win.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            WindowCompat.getInsetsController(win, win.decorView).isAppearanceLightStatusBars = !requireContext().isAppInDarkTheme()
+        }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -268,7 +282,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun historyStorageProvider(): HistoryStorage {
         return components.historyStorage
     }
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

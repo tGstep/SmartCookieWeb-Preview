@@ -12,7 +12,10 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener
 import androidx.fragment.app.FragmentManager
@@ -29,10 +32,12 @@ import com.cookiejarapps.android.smartcookieweb.browser.tabs.TabsTrayFragment
 import com.cookiejarapps.android.smartcookieweb.databinding.ActivityMainBinding
 import com.cookiejarapps.android.smartcookieweb.ext.alreadyOnDestination
 import com.cookiejarapps.android.smartcookieweb.ext.components
+import com.cookiejarapps.android.smartcookieweb.ext.isAppInDarkTheme
 import com.cookiejarapps.android.smartcookieweb.ext.nav
 import com.cookiejarapps.android.smartcookieweb.preferences.UserPreferences
 import com.cookiejarapps.android.smartcookieweb.search.SearchDialogFragmentDirections
 import com.cookiejarapps.android.smartcookieweb.settings.ThemeChoice
+import com.cookiejarapps.android.smartcookieweb.theme.applyAppTheme
 import com.cookiejarapps.android.smartcookieweb.utils.Utils
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -61,6 +66,7 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
     lateinit var binding: ActivityMainBinding
 
     lateinit var browsingModeManager: BrowsingModeManager
+    lateinit private var currentTheme: BrowsingMode
 
     private var isToolbarInflated = false
     private lateinit var navigationToolbar: Toolbar
@@ -82,6 +88,8 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
 
     private var originalContext: Context? = null
 
+    private var lastToolbarPosition: Int = 0
+
     protected open fun getIntentSessionId(intent: SafeIntent): String? = null
 
     @VisibleForTesting
@@ -97,6 +105,7 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
         browsingModeManager = createBrowsingModeManager(
             if (UserPreferences(this).lastKnownPrivate) BrowsingMode.Private else BrowsingMode.Normal
         )
+        currentTheme = browsingModeManager.mode
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
@@ -106,6 +115,8 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
         if(UserPreferences(this).firstLaunch){
             UserPreferences(this).firstLaunch = false
         }
+
+        lastToolbarPosition = UserPreferences(this).toolbarPosition
 
         //TODO: Move to settings page so app restart no longer required
         //TODO: Differentiate between using search engine / adding to list - the code below removes all from list as I don't support adding to list, only setting as default
@@ -156,16 +167,23 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
             navigateToBrowserOnColdStart()
         }
 
-        when (UserPreferences(this).appThemeChoice) {
-            ThemeChoice.SYSTEM.ordinal -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            }
-            ThemeChoice.LIGHT.ordinal -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            }
-            else -> {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            }
+        applyAppTheme(this)
+
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars()
+                        or WindowInsetsCompat.Type.displayCutout()
+            )
+            v.updatePadding(
+                left = bars.left,
+                top = bars.top,
+                right = bars.right,
+                bottom = bars.bottom,
+            )
+            val insetsController = WindowCompat.getInsetsController(window, v)
+            insetsController.isAppearanceLightStatusBars = !isAppInDarkTheme()
+            WindowInsetsCompat.CONSUMED
+            WindowInsetsCompat.CONSUMED
         }
 
         val rightDrawer = if(UserPreferences(this).swapDrawers) TabsTrayFragment() else BookmarkFragment()
@@ -200,6 +218,15 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
         components.notificationsDelegate.bindToActivity(this)
     }
 
+    override fun onResume() {
+        super.onResume()
+        val currentPosition = UserPreferences(this).toolbarPosition
+        if (currentPosition != lastToolbarPosition) {
+            lastToolbarPosition = currentPosition
+            recreate()
+        }
+    }
+
     final override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         // TODO: temporary fix
@@ -231,7 +258,11 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
     }
 
     protected open fun createBrowsingModeManager(initialMode: BrowsingMode): BrowsingModeManager {
-        return DefaultBrowsingModeManager(initialMode, UserPreferences(this)) {}
+        return DefaultBrowsingModeManager(initialMode, UserPreferences(this)) { newMode ->
+            if (newMode != currentTheme) {
+                if(!isFinishing) recreate()
+            }
+        }
     }
 
     final override fun onBackPressed() {

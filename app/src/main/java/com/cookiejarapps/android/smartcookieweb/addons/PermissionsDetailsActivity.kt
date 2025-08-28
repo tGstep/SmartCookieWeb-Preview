@@ -14,8 +14,10 @@ import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cookiejarapps.android.smartcookieweb.R
+import com.cookiejarapps.android.smartcookieweb.ext.isAppInDarkTheme
 import com.cookiejarapps.android.smartcookieweb.settings.ThemeChoice
 import com.cookiejarapps.android.smartcookieweb.preferences.UserPreferences
+import com.cookiejarapps.android.smartcookieweb.theme.applyAppTheme
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.AddonPermissionsAdapter
 import mozilla.components.feature.addons.ui.translateName
@@ -32,13 +34,7 @@ class PermissionsDetailsActivity : AppCompatActivity(), View.OnClickListener {
         val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
         title = addon.translateName(this)
 
-        if(UserPreferences(this).appThemeChoice == ThemeChoice.SYSTEM.ordinal) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-        } else if(UserPreferences(this).appThemeChoice == ThemeChoice.LIGHT.ordinal) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        }
+        applyAppTheme(this)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.addon_permissions)) { v, insets ->
             val bars = insets.getInsets(
@@ -52,7 +48,7 @@ class PermissionsDetailsActivity : AppCompatActivity(), View.OnClickListener {
                 bottom = bars.bottom,
             )
             val insetsController = WindowCompat.getInsetsController(window, v)
-            insetsController.isAppearanceLightStatusBars = UserPreferences(this).appThemeChoice != ThemeChoice.LIGHT.ordinal
+            insetsController.isAppearanceLightStatusBars = !isAppInDarkTheme()
             WindowInsetsCompat.CONSUMED
         }
 

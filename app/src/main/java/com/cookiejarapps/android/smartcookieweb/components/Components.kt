@@ -61,6 +61,8 @@ import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
 import mozilla.components.browser.engine.gecko.permission.GeckoSitePermissionsStorage
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.addons.amo.AMOAddonsProvider
+import mozilla.components.feature.downloads.DefaultDateTimeProvider
+import mozilla.components.feature.downloads.DefaultFileSizeFormatter
 import mozilla.components.feature.prompts.PromptMiddleware
 import mozilla.components.feature.prompts.file.FileUploadsDirCleaner
 import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
@@ -82,6 +84,10 @@ open class Components(private val applicationContext: Context) {
     val publicSuffixList by lazy { PublicSuffixList(applicationContext) }
 
     val clipboardHandler by lazy { ClipboardHandler(applicationContext) }
+
+    val fileSizeFormatter by lazy { DefaultFileSizeFormatter(applicationContext) }
+
+    val dateTimeProvider by lazy { DefaultDateTimeProvider() }
 
     val preferences: SharedPreferences =
             applicationContext.getSharedPreferences(BROWSER_PREFERENCES, Context.MODE_PRIVATE)
@@ -241,7 +247,6 @@ open class Components(private val applicationContext: Context) {
     val appLinksInterceptor by lazy {
         AppLinksInterceptor(
                 applicationContext,
-                interceptLinkClicks = true,
                 launchInApp = {
                     applicationContext.components.preferences.getBoolean(
                             PREF_LAUNCH_EXTERNAL_APP,
